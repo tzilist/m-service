@@ -13,3 +13,6 @@
 
 # Binary output
 messaging-server
+
+# Deps
+vendor/*
