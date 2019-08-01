@@ -1,0 +1,48 @@
+GoodRx Engineering Take Home (Messaging Service) Submission
+=====
+
+Question:
+We would like to run this system at scale to support hundreds of thousands
+of simultaneous users across multiple nodes. What are some limitations of
+your existing implementation and how could they be improved upon in
+upcoming iterations?
+
+Response:
+
+This implementation is currently very basic. To scale to hundereds of thousands of users,
+I will make a few assumptions:
+
+1. Real time data is important to deliver as fast as possible
+2. Storage of said information is ok to take some extra seconds
+3. The frontend client has some ability for reconnection to the system, data deduping, and organization
+
+In order to make this system as scalable as possible, we would need to injest the data into a node that can split the data into three directions,
+into a websocket (or any other bi-directional streaming protocol), into a database injection pipeline, and into an MQTT broker.
+
+Clients would connect via websocket (or any other suitable protocol). Any new messages that the client is subscribed to will be sent via websocket.
+The client would also connect to the MQTT node if possible. This will allow for slower, albeit, more reliable delivery of the messaging data. The client
+would need to dedupe the data coming from the client and the MQTT broker.
+
+By allowing the data to come from two sources, we can garauntee the reliability (via MQTT) and the speed (with websocket). Storage of the messages can be
+sent to whatever database is deemed correct for this situation via a pipeline (My first thought here would probably be either SQL with master/slave replication
+in different regions, or a wide-column store like Cassandra, Google Big Table, scylladb, etc.)
+
+Here is a map of what should be happening
+                   ____                                 ________
+                  |    |       ___________     |-----> |Database|
+                  | LB |      |           |    |        _________
+Client (Push) --> |    | ---> | Injestion | ---|-----> |Websocket|  <----|
+                  | LB |      |___________|    |        ____             |----- Client(Pull)
+                  |____|                       |-----> |MQTT| <----------|
+
+
+This would allow scaling to several hundereds of thousands of simultaneous connections as the MQTT brokers can be horizontally scaled (as well as the websocket clients).
+All services here are atomic and may be scaled besides the database.
+
+Loading of the messages may appear to show new messages before the old messages are available as the client may be able to poll the database when loading initially or when
+the client scrolls back in time through their messages.
+
+Open Questions
+
+[List of unresolved implementation questions. Please only fill in if relevant]
+Probably should have written some tests but I am out of time :(
