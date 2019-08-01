@@ -9,7 +9,5 @@ type CreateMessageResponse struct {
 
 // GetMessageResponse message response for returning full message bodies
 type GetMessageResponse struct {
-	ID       uuid.UUID `json:"id"`
-	UserName string    `json:"username"`
-	Message  string    `json:"message"`
+	Messages []Message `json:"messages"`
 }

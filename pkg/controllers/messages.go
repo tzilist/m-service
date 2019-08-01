@@ -51,9 +51,8 @@ func GetChannelMessages(ctx echo.Context) error {
 
 	}
 
-	var messageResponses []messages.GetMessageResponse
-	for _, m := range rawMessages {
-		messageResponses = append(messageResponses, m.MapToGetResponse())
+	messageResponses := messages.GetMessageResponse{
+		Messages: rawMessages,
 	}
 
 	return ctx.JSON(http.StatusOK, messageResponses)
